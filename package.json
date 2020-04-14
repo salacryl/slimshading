@@ -27,6 +27,7 @@
     "jsdoc": "^3.6.3",
     "method-override": "^3.0.0",
     "nodemon": "^2.0.2",
+    "three.js": "^0.77.1",
     "winston": "^3.2.1"
   },
   "devDependencies": {

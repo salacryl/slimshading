@@ -44,14 +44,12 @@ app.use(express.static(path.join(__dirname, "/public")));
 app.get("/", (req, res) => {
 	res.render("homepage", {greeting: "Salacryl's starting project",});
 });
+app.get("/three", (req, res) => {
+	res.render("three");
+});
 
 app.listen(PORT, () => logger.log("info", "Webservice startet on Port: %d", PORT));
 
-/** Test doku automation
- * @returns {int} 0 
-*/
-const testIt = () => 0;
-testIt();
 
 // init browser-sync
 logger.log("info", "ENV ist: %s", ENV);
