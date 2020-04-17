@@ -23,14 +23,14 @@
 				vec2 st = gl_FragCoord.xy/resolution;
 				if (st.y >0.65) st.y =0.0;
 				else st.y =st.y+0.25;
-				gl_FragColor = vec4(0.341*st.y,1.0*st.y,0.980*st.y,1.0);
+				//gl_FragColor = vec4(0.341*st.y,1.0*st.y,0.980*st.y,1.0);
 				
 			}
 
 		</script>
 
 		<script type="module">
-
+			import Logo from "/js/assets/meshes/dsr_logo.js";
 
 			var container;
 
@@ -42,36 +42,44 @@
 			
 
 			function init() {
-
+                
 				container = document.getElementById( 'container' );
 
-				camera = new THREE.OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
-
+				camera = new THREE.PerspectiveCamera( 27, window.innerWidth / window.innerHeight, 1, 500 );
+				camera.position.z = 35;
+				camera.position.x = 10;
+				camera.position.y = 7;
 				scene = new THREE.Scene();
-
-				var geometry = new THREE.PlaneBufferGeometry( 2, 2 );
+                //scene.background = new THREE.Color( 0xffffff );
+				var geometry = new THREE.BufferGeometry();
 
 				uniforms = {
 					resolution: { value: new THREE.Vector2( ) }
 				};
+				
 
-				var material = new THREE.ShaderMaterial( {
-
-					uniforms: uniforms,
-					vertexShader: document.getElementById( 'vertexShader' ).textContent,
-					fragmentShader: document.getElementById( 'fragmentShader' ).textContent
-
+				geometry.setAttribute( 'position', new THREE.BufferAttribute( Logo.vertices, 3 ) );
+				geometry.setAttribute( 'normal', new THREE.BufferAttribute( Logo.normals, 3 ) );
+				geometry.computeBoundingSphere();
+				geometry.rotateX(90 * (Math.PI /180));
+				
+             //   geometry = new THREE.SphereGeometry(1, 20, 20);
+				var material = new THREE.MeshStandardMaterial( {
+					color: 0x000099,  roughness: 0.2, emissive: 0x000000, 
 				} );
-
 				var mesh = new THREE.Mesh( geometry, material );
+		     
 				scene.add( mesh );
+			    var light = new THREE.PointLight( 0xffffff, 1, 100, 10.00 );
+				light.position.set( 5, 10, 9 );
+
+				scene.add(light);
 
 				renderer = new THREE.WebGLRenderer();
 				renderer.setPixelRatio( window.devicePixelRatio );
 				//renderer.setClearColor(new THREE.Color("rgb(255, 0, 0)"));
 				//renderer.setSize(window.innerWidth, window.innerHeight-183);
 				container.appendChild( renderer.domElement );
-				console.log(container);
 
 				onWindowResize();
 
