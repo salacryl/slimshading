@@ -1,5 +1,5 @@
-<script src="js/three.js"></script>
-<div class="col-xs-1 text-center text-secondary" style="margin-top: 50px;"><h1 style="color: #00ff00; ">Salacryl's slim shading pond of moods </h1></div>
+<script src="https://threejs.org//build/three.js"></script>
+<div class="col-xs-1 text-center text-secondary" style="margin-top: 50px;"><h1 style="color: #00ff00; ">Salacryl's slim shading pond of moods</h1></div>
 <script>
 			var scene = new THREE.Scene();
 			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
@@ -13,7 +13,7 @@
 			element.style=cStyle;
 
 			document.body.appendChild( element );
-			var texture = new THREE.TextureLoader().load( 'textures/basic_quader.png' );
+			var texture = new THREE.TextureLoader().load( 'js/assets/textures/basic_quader.png' );
 
 			// immediately use the texture for material creation
 			var material = new THREE.MeshBasicMaterial( { map: texture } );	

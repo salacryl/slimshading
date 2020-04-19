@@ -60,5 +60,12 @@ if (ENV==="dev"){
 		proxy: {
 			target: "localhost:" + PORT,
 		},
+		files: [
+		{
+			match: ["./public/**/*.*", "./views/**/*.*", "./views/*.*"],
+			fn:    function (event, file) {
+				this.reload()
+			}
+		}],
 	});
 }
