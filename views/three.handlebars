@@ -1,101 +1,126 @@
-<script src="js/three.js"></script>
+<script src="https://threejs.org/build/three.js"></script>
+<script src="https://threejs.org/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://threejs.org/examples/js/shaders/CopyShader.js"></script>
+<script src="https://threejs.org/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://threejs.org/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="/js/assets/meshes/dsr_logo.js"></script>
+<script src="/js/assets/math/perlinnoise.js"></script>
+<div class="col-xs-1 text-center text-secondary"><span style="color: #00ff00; ">Work in progress</span></div>
 <div id="container"></div>
 
-		<script id="vertexShader" type="x-shader/x-vertex">
-
-			varying vec2 vUv;
-
-			void main()	{
-
-				vUv = uv;
-
-				gl_Position = vec4( position, 1.0 );
-
-			}
-
-		</script>
-
-		<script id="fragmentShader" type="x-shader/x-fragment">
-
-			varying vec2 vUv;
-			uniform vec2 resolution;
-			void main()	{
-				vec2 st = gl_FragCoord.xy/resolution;
-				if (st.y >0.65) st.y =0.0;
-				else st.y =st.y+0.25;
-				//gl_FragColor = vec4(0.341*st.y,1.0*st.y,0.980*st.y,1.0);
-				
-			}
-
-		</script>
-
-		<script type="module">
-			import Logo from "/js/assets/meshes/dsr_logo.js";
-
-			var container;
-
-			var camera, scene, renderer;
-
-			var uniforms;
-
-			init();
-			
-
-			function init() {
-                
-				container = document.getElementById( 'container' );
-
-				camera = new THREE.PerspectiveCamera( 27, window.innerWidth / window.innerHeight, 1, 500 );
-				camera.position.z = 35;
-				camera.position.x = 10;
-				camera.position.y = 7;
-				scene = new THREE.Scene();
-                //scene.background = new THREE.Color( 0xffffff );
-				var geometry = new THREE.BufferGeometry();
-
-				uniforms = {
-					resolution: { value: new THREE.Vector2( ) }
-				};
+<script type="module">
+var openEyeEffect= {
+		uniforms : {
+		   size: { value: new THREE.Vector2(), },
+          tDiffuse: { value: null },
+			color: { value: new THREE.Vector3(), },
+			utime: {value: 0.0},
+		},
+		vertexShader: [
+            "varying vec2 vUv;",
+            "void main() {",
+                "vUv = uv;",
+                "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
 				
 
-				geometry.setAttribute( 'position', new THREE.BufferAttribute( Logo.vertices, 3 ) );
-				geometry.setAttribute( 'normal', new THREE.BufferAttribute( Logo.normals, 3 ) );
-				geometry.computeBoundingSphere();
-				geometry.rotateX(90 * (Math.PI /180));
-				
-             //   geometry = new THREE.SphereGeometry(1, 20, 20);
-				var material = new THREE.MeshStandardMaterial( {
-					color: 0x000099,  roughness: 0.2, emissive: 0x000000, 
-				} );
-				var mesh = new THREE.Mesh( geometry, material );
-		     
-				scene.add( mesh );
-			    var light = new THREE.PointLight( 0xffffff, 1, 100, 10.00 );
-				light.position.set( 5, 10, 9 );
+            "}"
+        ].join( "\n" ),
+        fragmentShader: [
+			"uniform sampler2D tDiffuse;",
+			"uniform float utime;",
+			"uniform vec2 size;",
+            "varying vec2 vUv;",
+            "void main() {",
+				"float offsetx=200.0;",
+				"float offsety=80.0;",
+				"float opening=1.0*pow(utime,3.0);",
+                "vec4 pcolor = texture2D( tDiffuse, vUv );",
+                "float uLeash =0.0001*-pow(gl_FragCoord.x-((size.x/2.0)+offsetx),2.0)+((size.y/2.0)+opening)+offsety;",
+				"float lLeash =0.0001*pow(gl_FragCoord.x-((size.x/2.0)+offsetx),2.0)+((size.y/2.0)-opening)+offsety;",
+				"gl_FragColor = pcolor;",
+				"if (gl_FragCoord.y > uLeash || gl_FragCoord.y < lLeash) gl_FragColor = vec4(0.0,0.0,0.0,1.0)  ;",
+            "}"
+        ].join( "\n" )
+	}
 
-				scene.add(light);
+var container;
 
-				renderer = new THREE.WebGLRenderer();
-				renderer.setPixelRatio( window.devicePixelRatio );
-				//renderer.setClearColor(new THREE.Color("rgb(255, 0, 0)"));
-				//renderer.setSize(window.innerWidth, window.innerHeight-183);
-				container.appendChild( renderer.domElement );
+var camera, scene, renderer;
 
-				onWindowResize();
+var shaderPass = new THREE.ShaderPass(openEyeEffect);
+var uniforms;
 
-				window.addEventListener( 'resize', onWindowResize, false );
-                renderer.render( scene, camera );
-			}
+init();
 
-			function onWindowResize() {
-				uniforms["resolution"].value.x = window.innerWidth;
-      			uniforms["resolution"].value.y = window.innerHeight;
-				renderer.setSize( window.innerWidth, window.innerHeight-110);
 
-			}
+function init() {
+	
+	container = document.getElementById( 'container' );
+	
+	camera = new THREE.PerspectiveCamera( 27, window.innerWidth / window.innerHeight, 1, 500 );
+	camera.position.z = 35;
+	camera.position.x = 0;
+	camera.position.y = 0;
+	scene = new THREE.Scene();
+	//scene.background = new THREE.Color( 0xffffff );
+	var geometry = new THREE.BufferGeometry();
+	geometry.setAttribute( 'position', new THREE.BufferAttribute( Logo.vertices, 3 ) );
+	geometry.setAttribute( 'normal', new THREE.BufferAttribute( Logo.normals, 3 ) );
+	geometry.setAttribute( 'uv', new THREE.BufferAttribute( Logo.uvs, 2 ) );
+	geometry.computeBoundingBox();
+	
+	geometry.center();
+	
+	var material = new THREE.MeshStandardMaterial( {
+		color: 0x0000FF,  
+		roughness: 0.32, emissive: 0x000000, 
+		side: THREE.FrontSide,
+	    map: PerlinNoise.GetNoiseTexture(20),
+		//bumpMap: PerlinNoise.GetNoiseTexture(10),
+	} );
+	var mesh = new THREE.Mesh(geometry, material);
+	scene.add( mesh );
+	var light = new THREE.PointLight( 0xffffff, 2, 20, 1.00 );
+	light.position.set( 7, 7, 10 );
+	
+	scene.add(light);
+	
+	renderer = new THREE.WebGLRenderer();
+	renderer.setPixelRatio( window.devicePixelRatio );
+	container.appendChild( renderer.domElement );
+	
+	onWindowResize();
+	
+	window.addEventListener( 'resize', onWindowResize, false );
+	var composer = new THREE.EffectComposer(renderer);
+    
+	var renderPass = new THREE.RenderPass(scene, camera);
+	composer.addPass (renderPass);
 
-			//
+	
+	composer.addPass (shaderPass);
 
-			
+	shaderPass.renderToScreen=true;
+	
+	requestAnimationFrame(render);
+	function render(time) {
+		var secs= time *= 0.001;  // convert time to seconds
+    	shaderPass.uniforms.utime.value = time;
 
-		</script>
+	  	mesh.rotation.y=secs; 
+	     composer.render();	
+		
+		requestAnimationFrame(render);
+	}
+}
+
+function onWindowResize() {
+	renderer.setSize( window.innerWidth, window.innerHeight-110);
+	shaderPass.uniforms.size.value = renderer.getSize();
+}
+
+//
+
+
+
+</script>
